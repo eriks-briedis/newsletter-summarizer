@@ -1,0 +1,15 @@
+description: Newsletter summarizer evals
+
+prompts:
+  - id: file://src/prompts/summarize-1.prompt.md
+    label: prompt-1
+  - id: file://src/prompts/summarize-2.prompt.md
+    label: prompt-2
+  - id: file://src/prompts/summarize-3.prompt.md
+    label: prompt-3
+
+providers:
+  - id: file://evals/provider.ts
+    label: summarizer
+
+tests: evals/tests.yaml

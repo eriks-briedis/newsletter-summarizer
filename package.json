@@ -9,7 +9,9 @@
   "scripts": {
     "build": "tsc",
     "start": "tsx src/index.ts",
-    "summarize": "tsx src/index.ts"
+    "summarize": "tsx src/index.ts",
+    "eval": "promptfoo eval",
+    "eval:view": "promptfoo view"
   },
   "dependencies": {
     "dotenv": "^16.4.5",
@@ -17,6 +19,7 @@
   },
   "devDependencies": {
     "@types/node": "^22.19.19",
+    "promptfoo": "^0.121.12",
     "tsx": "^4.19.0",
     "typescript": "^5.6.0"
   }
