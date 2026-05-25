@@ -1,15 +1,43 @@
+# promptfoo configuration
+# Docs: https://www.promptfoo.dev/docs/configuration/guide/
+#
+# promptfoo runs a cartesian product of:
+#   prompts × providers × tests
+# For each combination it renders the prompt with the test's `vars`,
+# calls the provider, then runs the assertions on the output.
+# Results land in a local SQLite DB and can be browsed via `npm run eval:view`.
+
 description: Newsletter summarizer evals
 
+# --- Prompts ---------------------------------------------------------------
+# Normally you'd list every prompt variant here (e.g. one entry per
+# `src/prompts/summarize-N.prompt.md`) and promptfoo would loop over them,
+# creating a side-by-side column per prompt in the viewer.
+#
+# We don't do that here because our custom provider loads the prompt template
+# itself (based on `vars.promptId`) so it can run the same HTML->text
+# preprocessing the real CLI uses. If we ALSO listed the 3 prompt files here,
+# promptfoo would multiply: 3 prompts × 9 tests = 27 runs instead of 9.
+#
+# So this is a single placeholder. The `raw` string still gets templated with
+# vars and passed to the provider, but our provider ignores it.
 prompts:
-  - id: file://src/prompts/summarize-1.prompt.md
-    label: prompt-1
-  - id: file://src/prompts/summarize-2.prompt.md
-    label: prompt-2
-  - id: file://src/prompts/summarize-3.prompt.md
-    label: prompt-3
+  - label: summarize
+    raw: "{{promptId}}|{{file}}"
 
+# --- Providers -------------------------------------------------------------
+# A provider is whatever produces the output to be graded. Built-ins exist for
+# OpenAI/Anthropic/etc, but we point at a local TS file so the eval exercises
+# the same code path as `npm run summarize` (htmlToText + prompt assembly +
+# OpenAI call). The file must export a class/function matching promptfoo's
+# ApiProvider interface — see evals/provider.ts.
 providers:
   - id: file://evals/provider.ts
     label: summarizer
 
+# --- Tests -----------------------------------------------------------------
+# Each test row supplies `vars` (substituted into the prompt) and optionally
+# `assert` (graders run against the output). Pulled from a separate file to
+# keep this config readable; promptfoo also supports inline `tests:` arrays
+# and CSV/JSON sources.
 tests: evals/tests.yaml
