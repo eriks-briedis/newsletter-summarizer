@@ -35,9 +35,80 @@ providers:
   - id: file://evals/provider.ts
     label: summarizer
 
+# --- defaultTest -----------------------------------------------------------
+# Assertions and options here are merged into every test row. Per-row asserts
+# in tests.yaml are appended, not replaced. Use this for shared structural
+# checks so individual rows stay focused on what's unique to them.
+defaultTest:
+  options:
+    # Grader model for llm-rubric / model-graded asserts. Keep it cheap — the
+    # grader runs once per rubric per test, so costs add up fast.
+    provider: openai:chat:gpt-4o-mini
+
+  assert:
+    # ---- Deterministic structural checks --------------------------------
+    # All structural logic lives in evals/assertions.ts so it can use
+    # TypeScript + Zod and be unit-tested. Each entry below references a
+    # named export from that file. The function receives the model output
+    # string and either returns true (pass) or throws (fail).
+
+    # `is-json` is a built-in shortcut; redundant with matchesSchema below
+    # (Zod parses JSON too) but kept as a fast-fail with a clearer error
+    # when the model returns markdown / prose instead of JSON.
+    - type: is-json
+
+    # Validates the full output shape against the Zod schema — covers
+    # top-level fields, articles[] presence, URL format, and the
+    # read_priority enum in a single assert.
+    - type: javascript
+      value: file://evals/assertions.ts:matchesSchema
+
+    # Cross-field consistency: article_count and sponsored_count must
+    # agree with what's actually in the articles array.
+    - type: javascript
+      value: file://evals/assertions.ts:countsMatch
+
+    # Each article's tldr should be one sentence — keeps summaries tight.
+    - type: javascript
+      value: file://evals/assertions.ts:tldrIsOneSentence
+
+    # Reject filler phrases ("stay tuned", "the author discusses", ...).
+    - type: javascript
+      value: file://evals/assertions.ts:noBannedPhrases
+
+    # No two articles should be near-duplicates (cosine > 0.85 on title
+    # or tldr). Catches the model summarizing the same story twice.
+    - type: javascript
+      value: file://evals/assertions.ts:dedupCheck
+
+    # ---- LLM-graded checks ---------------------------------------------
+    # `llm-rubric` asks the grader model to judge `output` against the
+    # rubric prose and return pass/fail + reasoning. Use for qualities that
+    # can't be expressed as code (factuality, relevance, tone). Each rubric
+    # = one extra LLM call per test, so keep them few and focused.
+    
+    # Removed for now to setup robust deterministic checks first, will add back in once those are solid.
+    # - type: llm-rubric
+    #   value: >
+    #     Every article's `tldr` accurately reflects what the corresponding
+    #     article says. No invented company names, products, people, numbers,
+    #     or events that aren't supported by the article body.
+
+    # - type: llm-rubric
+    #   value: >
+    #     Each article's `key_points` are distinct (no near-duplicates within
+    #     the same article), factual, and clearly grounded in the source
+    #     material. Reject filler like "this is interesting" or generic
+    #     platitudes.
+
+    # - type: llm-rubric
+    #   value: >
+    #     Each article's `topics` array contains specific, meaningful tags
+    #     (e.g. "llm", "biotech", "kubernetes"). Reject generic filler like
+    #     "news", "tech", "article", "update", "information".
+
 # --- Tests -----------------------------------------------------------------
 # Each test row supplies `vars` (substituted into the prompt) and optionally
-# `assert` (graders run against the output). Pulled from a separate file to
-# keep this config readable; promptfoo also supports inline `tests:` arrays
-# and CSV/JSON sources.
+# `assert` (graders run against the output). Per-row asserts are MERGED with
+# the defaultTest asserts above, not substituted.
 tests: evals/tests.yaml

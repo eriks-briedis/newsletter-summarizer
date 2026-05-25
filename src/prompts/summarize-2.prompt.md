@@ -156,5 +156,5 @@
 </critical_constraint>
 
 <newsletter_input>
-  {{NEWSLETTER_CONTENT}}
+  {{newsletter_content}}
 </newsletter_input>

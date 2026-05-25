@@ -34,7 +34,7 @@ export function loadPromptTemplate(promptId: PromptId): string {
 export function buildPrompt(promptTemplate: string, html: string): string {
   const newsletter = htmlToText(html);
   return promptTemplate.includes("{{newsletter_content}}")
-    ? promptTemplate.replace("{{newsletter_content}}", newsletter)
+    ? promptTemplate.replaceAll("{{newsletter_content}}", newsletter)
     : `${promptTemplate}\n\n${newsletter}`;
 }
 

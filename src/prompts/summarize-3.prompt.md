@@ -100,4 +100,4 @@ If the input is empty, not a newsletter, or otherwise unparseable, return exactl
 - Preserve the schema exactly: do not add, rename, or omit fields.
 
 # Newsletter input
-{{NEWSLETTER_CONTENT}}
+{{newsletter_content}}

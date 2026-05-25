@@ -19,6 +19,25 @@ import { resolve, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import "dotenv/config";
 import { summarize, type PromptId } from "../src/summarize.js";
+import { cleanUrl } from "../src/utils/clean-url.js";
+
+// Walk the parsed summary and unwrap any tracking-redirect URLs back to the
+// original article URLs. Keeps eval assertions (gold-standard lookups,
+// URL regex checks) anchored to the real URL rather than the wrapper.
+function cleanArticleUrls(raw: string): string {
+  let parsed: { newsletter?: { articles?: { url?: string }[] } };
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return raw; // not JSON — let downstream asserts surface the error
+  }
+  const articles = parsed.newsletter?.articles;
+  if (!Array.isArray(articles)) return raw;
+  for (const a of articles) {
+    if (typeof a.url === "string") a.url = cleanUrl(a.url);
+  }
+  return JSON.stringify(parsed);
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = resolve(__dirname, "..");
@@ -58,7 +77,7 @@ export default class NewsletterSummarizerProvider {
     try {
       const html = readFileSync(htmlPath, "utf8");
       const { raw } = await summarize({ promptId, html });
-      return { output: raw };
+      return { output: cleanArticleUrls(raw) };
     } catch (err) {
       return { error: err instanceof Error ? err.message : String(err) };
     }

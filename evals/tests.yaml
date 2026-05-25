@@ -10,58 +10,71 @@
 #                 syntax. Also passed to custom providers as `context.vars`.
 #                 Our provider reads `vars.promptId` to pick the template and
 #                 `vars.file` to locate the newsletter HTML under data/.
-#
-# Fields you'll commonly add later:
-#   assert      : Per-test grading rules (e.g. is-json, contains, llm-rubric,
-#                 javascript). Shared assertions can live under `defaultTest`
-#                 in promptfooconfig.yaml so you don't repeat them per row.
-#   threshold   : Pass/fail threshold when multiple asserts are weighted.
+#   assert      : Per-test grading rules, MERGED with `defaultTest.assert`
+#                 in promptfooconfig.yaml. Use for fixture-specific checks.
 #
 # Matrix layout: 3 newsletters × 3 prompt variants = 9 runs. Enumerated by
 # hand for clarity; for larger matrices use promptfoo `scenarios` to generate
 # combos from value lists instead of typing them out.
+#
+# Per-row `assert` here is fixture-specific (e.g. checking the source name
+# appears in the output). Shared structural checks live in
+# `promptfooconfig.yaml` under `defaultTest.assert`. `icontains` is a
+# case-insensitive substring match.
 
 - description: bloomberg / prompt-1
-  vars:
-    file: bloomberg--23-05-2026.html
-    promptId: "1"
+  vars: { file: bloomberg--23-05-2026.html, promptId: "1" }
+  assert:
+    - { type: icontains, value: bloomberg }
 
 - description: bloomberg / prompt-2
-  vars:
-    file: bloomberg--23-05-2026.html
-    promptId: "2"
+  vars: { file: bloomberg--23-05-2026.html, promptId: "2" }
+  assert:
+    - { type: icontains, value: bloomberg }
 
 - description: bloomberg / prompt-3
-  vars:
-    file: bloomberg--23-05-2026.html
-    promptId: "3"
+  vars: { file: bloomberg--23-05-2026.html, promptId: "3" }
+  assert:
+    - { type: icontains, value: bloomberg }
 
 - description: fireship / prompt-1
-  vars:
-    file: fireship--23-05-2026.html
-    promptId: "1"
+  vars: { file: fireship--23-05-2026.html, promptId: "1" }
+  assert:
+    - { type: icontains, value: fireship }
 
 - description: fireship / prompt-2
-  vars:
-    file: fireship--23-05-2026.html
-    promptId: "2"
+  vars: { file: fireship--23-05-2026.html, promptId: "2" }
+  assert:
+    - { type: icontains, value: fireship }
 
 - description: fireship / prompt-3
-  vars:
-    file: fireship--23-05-2026.html
-    promptId: "3"
+  vars: { file: fireship--23-05-2026.html, promptId: "3" }
+  assert:
+    - { type: icontains, value: fireship }
 
 - description: tldr / prompt-1
-  vars:
-    file: tldr--21-05-2026.html
-    promptId: "1"
+  vars: { file: tldr--21-05-2026.html, promptId: "1" }
+  assert:
+    - { type: icontains, value: tldr }
+    # Topic recall vs hand-annotated gold standard for this fixture.
+    # The function returns a score (mean recall); `threshold` overrides
+    # its built-in pass bar so we can tune strictness in one place.
+    - type: javascript
+      value: file://evals/assertions.ts:topicsMatchGoldStandard
+      threshold: 0.5
 
 - description: tldr / prompt-2
-  vars:
-    file: tldr--21-05-2026.html
-    promptId: "2"
+  vars: { file: tldr--21-05-2026.html, promptId: "2" }
+  assert:
+    - { type: icontains, value: tldr }
+    - type: javascript
+      value: file://evals/assertions.ts:topicsMatchGoldStandard
+      threshold: 0.5
 
 - description: tldr / prompt-3
-  vars:
-    file: tldr--21-05-2026.html
-    promptId: "3"
+  vars: { file: tldr--21-05-2026.html, promptId: "3" }
+  assert:
+    - { type: icontains, value: tldr }
+    - type: javascript
+      value: file://evals/assertions.ts:topicsMatchGoldStandard
+      threshold: 0.5
